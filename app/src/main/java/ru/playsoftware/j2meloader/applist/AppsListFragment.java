@@ -428,8 +428,50 @@ public class AppsListFragment extends Fragment implements MenuProvider {
 		}
 		preferences.edit().putInt(PREF_APP_SORT, sortVariant).apply();
 	}
+    private boolean installRequested = false;
+    private boolean launched = false;
 
-	private void onDbUpdated(List<AppItem> items) {
+    private void onDbUpdated(List<AppItem> items) {
+        adapter.setItems(items);
+        if (appUri != null) {
+            InstallerDialog.newInstance(appUri).show(getParentFragmentManager(), "installer");
+            appUri = null;
+            return;
+        }
+        if (launched) return;
+        if (!items.isEmpty()) {
+            launched = true;
+            preferences.edit().putBoolean("bundled_game_installed", true).apply();
+            AppItem game = items.get(0);
+            Config.startApp(requireActivity(), game.getTitle(), game.getPathExt(), false);
+            requireActivity().finish();
+        } else if (!installRequested && !preferences.getBoolean("bundled_game_installed", false)) {
+            installRequested = true;
+            Uri uri = copyBundledGame();
+            if (uri != null) {
+                InstallerDialog.newInstance(uri).show(getParentFragmentManager(), "installer");
+            }
+        }
+    }
+
+    private Uri copyBundledGame() {
+        try {
+            File out = new File(requireContext().getCacheDir(), "game.jar");
+            try (java.io.InputStream in = requireContext().getAssets().open("game.jar");
+                 java.io.FileOutputStream os = new java.io.FileOutputStream(out)) {
+                byte[] buf = new byte[8192];
+                int n;
+                while ((n = in.read(buf)) > 0) {
+                    os.write(buf, 0, n);
+                }
+            }
+            return Uri.fromFile(out);
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to copy bundled game", e);
+            return null;
+        }
+	}
+	private void onDbUpdatedOld(List<AppItem> items) {
 		adapter.setItems(items);
 		if (appUri != null) {
 			InstallerDialog.newInstance(appUri).show(getParentFragmentManager(), "installer");
