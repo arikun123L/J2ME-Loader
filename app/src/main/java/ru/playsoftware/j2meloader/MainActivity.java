@@ -66,6 +66,9 @@ public class MainActivity extends BaseActivity {
 	public void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+if (getSupportActionBar() != null) getSupportActionBar().hide();
+getWindow().getDecorView().setBackgroundColor(android.graphics.Color.BLACK);
+findViewById(R.id.container).setVisibility(android.view.View.INVISIBLE);
 		if (FileUtils.isExternalStorageLegacy()) {
 			permissionsLauncher.launch(STORAGE_PERMISSIONS);
 		}
@@ -81,15 +84,8 @@ public class MainActivity extends BaseActivity {
 					.replace(R.id.container, fragment).commit();
 		}
 		preferences = PreferenceManager.getDefaultSharedPreferences(this);
-		if (!preferences.contains(PREF_TOOLBAR)) {
-			boolean enable = !ViewConfiguration.get(this).hasPermanentMenuKey();
-			preferences.edit().putBoolean(PREF_TOOLBAR, enable).apply();
-		}
-		boolean warningShown = preferences.getBoolean(PREF_STORAGE_WARNING_SHOWN, false);
-		if (!FileUtils.isExternalStorageLegacy() && !warningShown) {
-			showScopedStorageDialog();
-			preferences.edit().putBoolean(PREF_STORAGE_WARNING_SHOWN, true).apply();
-		}
+		preferences.edit().putBoolean(PREF_TOOLBAR, false).apply();
+		
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
 	}
 
